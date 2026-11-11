@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Дизайн-система</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+  /* Тема до отрисовки: сохранённая → системная → светлая */
+  (function () {
+    var t; try { t = localStorage.getItem('ds-theme'); } catch (e) {}
+    if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.dataset.theme = t;
+  })();
+</script>
+<style>
+/* =====================================================================
+   КАК ПОЛЬЗОВАТЬСЯ
+   Для своего проекта скопируйте блоки 1–3 (токены, база, компоненты).
+   Блок 4 и всё, что ниже, нужно только для витрины этой страницы.
+   Тёмная тема включается атрибутом <html data-theme="dark">.
+   ===================================================================== */
+
+/* =====================================================================
+   1. ДИЗАЙН-ТОКЕНЫ
+   ===================================================================== */
+:root {
+  /* Шрифты */
+  --font-sans: "Onest", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Шкала размеров, начертания, интерлиньяж */
+  --fs-xs: .8125rem;  --fs-sm: .9375rem; --fs-md: 1rem;
+  --fs-lg: 1.25rem;   --fs-xl: 1.625rem; --fs-2xl: 2.25rem;
+  --fw-regular: 400;  --fw-medium: 500;  --fw-semibold: 600;
+  --lh-tight: 1.2;    --lh-base: 1.55;
+
+  /* Отступы */
+  --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem;
+  --space-5: 1.5rem; --space-6: 2rem;  --space-7: 3.5rem;
+
+  /* Скругления и высоты контролов */
+  --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px; --radius-full: 999px;
+  --control-sm: 32px; --control-md: 40px; --control-lg: 48px;
+
+  /* Движение */
+  --ease: cubic-bezier(.2, .7, .2, 1); --dur: 140ms;
+
+  /* Светлая тема: холодная бумага + чернильный синий */
+  color-scheme: light;
+  --color-bg: #EEF1F5;
+  --color-surface: #FFFFFF;
+  --color-sunken: #E6EAF0;
+  --color-border: #D5DBE4;
+  --color-border-strong: #8794A6;
+  --color-text: #131C28;
+  --color-text-muted: #4A586B;
+  --color-text-faint: #66748A;
+
+  --color-primary: #2B44D9;
+  --color-primary-hover: #2237B8;
+  --color-primary-active: #1A2B94;
+  --color-primary-soft: #E4E8FD;
+  --color-on-primary: #FFFFFF;
+  --color-focus: #2B44D9;
+
+  --color-success: #11794A; --color-success-soft: #DDF3E8; --color-success-text: #0A5A36;
+  --color-warning: #B26A00; --color-warning-soft: #FFEFCF; --color-warning-text: #7A4600;
+  --color-danger:  #C8283E; --color-danger-soft:  #FCE3E7; --color-danger-text:  #9A1A2D;
+  --color-danger-hover: #A91F33; --color-danger-active: #8B1828; --color-on-danger: #FFFFFF;
+  --color-info:    #0F6E9E; --color-info-soft:    #DCF0FA; --color-info-text:    #0A5078;
+
+  /* Тени тонированы в цвет чернил, а не в нейтральный серый */
+  --shadow-xs: 0 1px 2px rgba(19, 28, 40, .08);
+  --shadow-sm: 0 1px 2px rgba(19, 28, 40, .06), 0 2px 8px rgba(19, 28, 40, .06);
+  --shadow-md: 0 2px 4px rgba(19, 28, 40, .06), 0 8px 20px rgba(19, 28, 40, .10);
+  --shadow-lg: 0 4px 8px rgba(19, 28, 40, .06), 0 20px 44px rgba(19, 28, 40, .18);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg: #0B111B;
+  --color-surface: #131B29;
+  --color-sunken: #0E1522;
+  --color-border: #243046;
+  --color-border-strong: #5A6B87;
+  --color-text: #E8EDF5;
+  --color-text-muted: #A5B2C6;
+  --color-text-faint: #8393AA;
+
+  --color-primary: #7B8DFF;
+  --color-primary-hover: #94A2FF;
+  --color-primary-active: #6477F0;
+  --color-primary-soft: rgba(123, 141, 255, .16);
+  --color-on-primary: #0A0F20;
+  --color-focus: #94A2FF;
+
+  --color-success: #3DD598; --color-success-soft: rgba(61, 213, 152, .14); --color-success-text: #86E6BE;
+  --color-warning: #F5B544; --color-warning-soft: rgba(245, 181, 68, .14); --color-warning-text: #F7CE86;
+  --color-danger:  #FF6B7F; --color-danger-soft:  rgba(255, 107, 127, .14); --color-danger-text:  #FFA0AD;
+  --color-danger-hover: #FF8795; --color-danger-active: #F0536A; --color-on-danger: #1A0509;
+  --color-info:    #4DB8F0; --color-info-soft:    rgba(77, 184, 240, .14); --color-info-text:    #93D3F6;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, .4);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .35), 0 2px 8px rgba(0, 0, 0, .3);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, .35), 0 8px 20px rgba(0, 0, 0, .4);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, .4), 0 20px 44px rgba(0, 0, 0, .55);
+}
+
+/* =====================================================================
+   2. БАЗА
+   ===================================================================== */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: var(--fw-regular) var(--fs-md)/var(--lh-base) var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition-duration: .01ms !important; } }
+
+.icon {
+  width: 20px; height: 20px; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* =====================================================================
+   3. КОМПОНЕНТЫ
+   ===================================================================== */
+
+/* ---- Кнопка (атом) ------------------------------------------------- */
+.btn {
+  --btn-bg: var(--color-primary);
+  --btn-bg-hover: var(--color-primary-hover);
+  --btn-bg-active: var(--color-primary-active);
+  --btn-fg: var(--color-on-primary);
+  --btn-border: transparent;
+
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  height: var(--control-md); padding: 0 var(--space-4);
+  background: var(--btn-bg); color: var(--btn-fg);
+  border: 1px solid var(--btn-border); border-radius: var(--radius-md);
+  font-family: inherit; font-size: var(--fs-sm); font-weight: var(--fw-medium); line-height: 1;
+  white-space: nowrap; text-decoration: none; cursor: pointer; user-select: none;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.btn .icon { width: 1.2em; height: 1.2em; }
+
+.btn--secondary {
+  --btn-bg: var(--color-surface); --btn-bg-hover: var(--color-sunken); --btn-bg-active: var(--color-border);
+  --btn-fg: var(--color-text);    --btn-border: var(--color-border-strong);
+}
+.btn--ghost {
+  --btn-bg: transparent;
+  --btn-bg-hover: var(--color-primary-soft);
+  --btn-bg-active: color-mix(in srgb, var(--color-primary) 24%, transparent);
+  --btn-fg: var(--color-primary);
+}
+.btn--danger {
+  --btn-bg: var(--color-danger); --btn-bg-hover: var(--color-danger-hover); --btn-bg-active: var(--color-danger-active);
+  --btn-fg: var(--color-on-danger);
+}
+
+.btn--sm { height: var(--control-sm); padding: 0 var(--space-3); border-radius: var(--radius-sm); }
+.btn--lg { height: var(--control-lg); padding: 0 var(--space-5); font-size: var(--fs-md); }
+.btn--icon { width: var(--control-md); padding: 0; }
+.btn--icon.btn--sm { width: var(--control-sm); }
+.btn--icon.btn--lg { width: var(--control-lg); }
+.btn--block { width: 100%; }
+
+/* Состояния: классы .is-* нужны только чтобы показать состояние статично */
+.btn:hover:not(:disabled), .btn.is-hover { background: var(--btn-bg-hover); }
+.btn:active:not(:disabled), .btn.is-active { background: var(--btn-bg-active); transform: translateY(1px); }
+.btn.is-focus { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.btn[aria-busy="true"] { cursor: progress; pointer-events: none; }
+.btn[aria-busy="true"]::before {
+  content: ""; width: 1em; height: 1em;
+  border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+.btn:disabled, .btn.is-disabled {
+  background: var(--color-sunken); color: var(--color-text-faint);
+  border-color: var(--color-border); cursor: not-allowed; transform: none;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---- Бейдж (атом) -------------------------------------------------- */
+.badge {
+  display: inline-flex; align-items: center; width: fit-content; height: 22px; padding: 0 var(--space-2);
+  background: var(--b-bg, var(--color-sunken)); color: var(--b-fg, var(--color-text-muted));
+  border-radius: var(--radius-full); font-size: var(--fs-xs); font-weight: var(--fw-medium);
+}
+.badge--primary { --b-bg: var(--color-primary-soft); --b-fg: var(--color-primary); }
+.badge--success { --b-bg: var(--color-success-soft); --b-fg: var(--color-success-text); }
+.badge--warning { --b-bg: var(--color-warning-soft); --b-fg: var(--color-warning-text); }
+.badge--danger  { --b-bg: var(--color-danger-soft);  --b-fg: var(--color-danger-text); }
+
+/* ---- Поле ввода (атом + молекула .field) --------------------------- */
+.field { display: grid; gap: var(--space-2); width: 100%; max-width: 360px; align-content: start; }
+.field__label { font-size: var(--fs-sm); font-weight: var(--fw-medium); }
+.field__hint { font-size: var(--fs-xs); color: var(--color-text-muted); }
+
+.input {
+  width: 100%; height: var(--control-md); padding: 0 var(--space-3);
+  background-color: var(--color-surface); color: var(--color-text);
+  border: 1px solid var(--color-border-strong); border-radius: var(--radius-md);
+  font-family: inherit; font-size: var(--fs-sm);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.input::placeholder { color: var(--color-text-faint); }
+.input:hover:not(:disabled) { border-color: var(--color-text-muted); }
+.input:focus, .input.is-focus {
+  outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+.input:disabled {
+  background-color: var(--color-sunken); color: var(--color-text-faint);
+  border-color: var(--color-border); cursor: not-allowed;
+}
+textarea.input { height: auto; min-height: 96px; padding: var(--space-3); resize: vertical; line-height: 1.45; }
+select.input {
+  appearance: none; -webkit-appearance: none; padding-right: 40px; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238393AA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; background-size: 18px;
+}
+
+.input-wrap { position: relative; }
+.input-wrap .icon {
+  position: absolute; left: 12px; top: 50%; width: 18px; height: 18px;
+  transform: translateY(-50%); color: var(--color-text-faint); pointer-events: none;
+}
+.input-wrap .input { padding-left: 38px; }
+
+.field--error .input { border-color: var(--color-danger); }
+.field--error .input:focus { box-shadow: 0 0 0 3px var(--color-danger-soft); }
+.field--error .field__hint { color: var(--color-danger-text); }
+.field--success .input { border-color: var(--color-success); }
+.field--success .input:focus { box-shadow: 0 0 0 3px var(--color-success-soft); }
+.field--success .field__hint { color: var(--color-success-text); }
+
+/* ---- Чекбокс и радио (атомы) --------------------------------------- */
+.check, .switch {
+  display: inline-flex; align-items: flex-start; gap: var(--space-3);
+  font-size: var(--fs-sm); line-height: 1.35; cursor: pointer;
+}
+.check small { display: block; margin-top: 2px; font-size: var(--fs-xs); color: var(--color-text-muted); }
+.check:has(input:disabled), .switch:has(input:disabled) { color: var(--color-text-faint); cursor: not-allowed; }
+
+.check input {
+  appearance: none; -webkit-appearance: none;
+  display: grid; place-content: center; flex: none; width: 20px; height: 20px; margin: 0;
+  background: var(--color-surface); border: 1.5px solid var(--color-border-strong); border-radius: var(--radius-sm);
+  cursor: inherit; transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.check input::after {
+  content: ""; width: 12px; height: 12px; background: var(--color-on-primary);
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  transform: scale(0); transition: transform var(--dur) var(--ease);
+}
+.check input:hover:not(:disabled) { border-color: var(--color-primary); }
+.check input:checked, .check input:indeterminate { background: var(--color-primary); border-color: var(--color-primary); }
+.check input:checked::after { transform: scale(1); }
+.check input:indeterminate::after { clip-path: none; width: 10px; height: 2px; border-radius: 2px; transform: scale(1); }
+.check input[type="radio"] { border-radius: 50%; }
+.check input[type="radio"]::after { clip-path: none; width: 8px; height: 8px; border-radius: 50%; }
+.check input:disabled { background: var(--color-sunken); border-color: var(--color-border); }
+.check input:disabled:checked { background: var(--color-border-strong); border-color: var(--color-border-strong); }
+
+/* ---- Переключатель (атом) ------------------------------------------ */
+.switch { align-items: center; }
+.switch input {
+  appearance: none; -webkit-appearance: none; position: relative; flex: none;
+  width: 40px; height: 24px; margin: 0; background: var(--color-border-strong);
+  border-radius: var(--radius-full); cursor: inherit; transition: background var(--dur) var(--ease);
+}
+.switch input::after {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+  background: #fff; border-radius: 50%; box-shadow: var(--shadow-xs);
+  transition: transform var(--dur) var(--ease);
+}
+.switch input:checked { background: var(--color-primary); }
+.switch input:checked::after { transform: translateX(16px); }
+.switch input:disabled { opacity: .5; }
+
+/* ---- Алерт (молекула) ---------------------------------------------- */
+.alert {
+  --a-accent: var(--color-info); --a-bg: var(--color-info-soft); --a-fg: var(--color-info-text);
+  display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-3); align-items: start;
+  padding: var(--space-4); background: var(--a-bg); color: var(--a-fg);
+  border: 1px solid color-mix(in srgb, var(--a-accent) 35%, transparent); border-radius: var(--radius-md);
+  font-size: var(--fs-sm);
+}
+.alert > .icon { color: var(--a-accent); margin-top: 1px; }
+.alert__title { margin: 0 0 2px; font-weight: var(--fw-semibold); }
+.alert__text { margin: 0; }
+.alert .btn {
+  --btn-fg: var(--a-fg);
+  --btn-bg-hover: color-mix(in srgb, var(--a-accent) 16%, transparent);
+  --btn-bg-active: color-mix(in srgb, var(--a-accent) 28%, transparent);
+  margin: -6px -6px -6px 0;
+}
+.alert--success { --a-accent: var(--color-success); --a-bg: var(--color-success-soft); --a-fg: var(--color-success-text); }
+.alert--warning { --a-accent: var(--color-warning); --a-bg: var(--color-warning-soft); --a-fg: var(--color-warning-text); }
+.alert--danger  { --a-accent: var(--color-danger);  --a-bg: var(--color-danger-soft);  --a-fg: var(--color-danger-text); }
+
+/* ---- Карточка (молекула) ------------------------------------------- */
+.card {
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--color-surface); color: inherit; text-decoration: none;
+  border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+}
+.card__body { display: grid; gap: var(--space-2); padding: var(--space-5); }
+.card__title { margin: 0; font-size: var(--fs-lg); font-weight: var(--fw-semibold); line-height: var(--lh-tight); letter-spacing: -.01em; }
+.card__text { margin: 0; color: var(--color-text-muted); }
+.card__footer {
+  display: flex; justify-content: flex-end; gap: var(--space-2);
+  padding: var(--space-3) var(--space-5); background: var(--color-sunken); border-top: 1px solid var(--color-border);
+}
+.card--interactive { transition: box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease); }
+.card--interactive:hover { box-shadow: var(--shadow-md); border-color: var(--color-border-strong); }
+.card--flat { box-shadow: none; }
+
+/* =====================================================================
+   4. ВИТРИНА (только для этой страницы)
+   ===================================================================== */
+.page { max-width: 1040px; margin: 0 auto; padding: var(--space-6) var(--space-4) var(--space-7); }
+.top { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--space-4); }
+h1 { margin: 0 0 var(--space-2); font-size: var(--fs-2xl); font-weight: var(--fw-semibold); line-height: var(--lh-tight); letter-spacing: -.02em; }
+h2 { margin: 0 0 var(--space-1); font-size: var(--fs-xl); font-weight: var(--fw-semibold); line-height: var(--lh-tight); letter-spacing: -.015em; }
+.lead { margin: 0; max-width: 62ch; color: var(--color-text-muted); }
+.section { margin-top: var(--space-7); }
+.section > .lead { margin-bottom: var(--space-5); }
+.sub { margin: var(--space-5) 0 var(--space-3); font-size: var(--fs-md); font-weight: var(--fw-semibold); }
+.sub:first-child { margin-top: 0; }
+code, .caption { font-family: var(--font-mono); font-size: var(--fs-xs); }
+.caption { color: var(--color-text-muted); }
+
+.stage { display: grid; gap: var(--space-5); padding: var(--space-5); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-5); align-items: start; }
+.scroll { overflow-x: auto; padding: 4px; margin: -4px; }
+
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-3); }
+.swatch { overflow: hidden; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.swatch i { display: block; height: 52px; border-bottom: 1px solid var(--color-border); }
+.swatch div { display: grid; gap: 2px; padding: var(--space-2) var(--space-3); font-size: var(--fs-xs); }
+.swatch b { font-weight: var(--fw-medium); }
+.swatch code { color: var(--color-text-muted); overflow-wrap: anywhere; }
+
+.type-row { display: grid; grid-template-columns: 150px 1fr; align-items: baseline; gap: var(--space-4); padding-bottom: var(--space-3); border-bottom: 1px solid var(--color-border); }
+.type-row:last-child { padding-bottom: 0; border-bottom: 0; }
+@media (max-width: 560px) { .type-row { grid-template-columns: 1fr; gap: var(--space-1); } }
+
+.boxes { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--space-5); }
+.box { display: grid; place-items: center; height: 84px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+
+.states { display: grid; grid-template-columns: 96px repeat(6, max-content); align-items: center; gap: var(--space-4); }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: var(--space-5); align-items: start; }
+.alerts { display: grid; gap: var(--space-3); }
+</style>
+</head>
+<body>
+
+<!-- Иконки (спрайт) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M21.8 10A10 10 0 1 1 17 3.3"/><path d="m9 11 3 3L22 4"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-error" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+</svg>
+
+<main class="page">
+
+  <header class="top">
+    <div>
+      <h1>Дизайн-система</h1>
+      <p class="lead">Токены, атомы и молекулы в одном файле. Для своего проекта достаточно скопировать блоки 1–3 из тега style.</p>
+    </div>
+    <button class="btn btn--secondary btn--sm" id="theme" type="button">Тёмная тема</button>
+  </header>
+
+  <!-- ТОКЕНЫ -->
+  <section class="section" id="colors">
+    <h2>Цвет</h2>
+    <p class="lead">Токены семантические: компоненты ссылаются на роль цвета, а не на конкретный оттенок. Тёмная тема переопределяет те же имена.</p>
+    <div id="swatches"></div>
+  </section>
+
+  <section class="section" id="type">
+    <h2>Типографика</h2>
+    <p class="lead">Onest для интерфейса и заголовков, JetBrains Mono для кода и значений токенов. Оба шрифта поддерживают кириллицу.</p>
+    <div class="stage">
+      <div class="type-row"><span class="caption">fs-2xl, 2.25rem</span><span style="font-size:var(--fs-2xl);font-weight:var(--fw-semibold);line-height:var(--lh-tight);letter-spacing:-.02em">Заголовок страницы</span></div>
+      <div class="type-row"><span class="caption">fs-xl, 1.625rem</span><span style="font-size:var(--fs-xl);font-weight:var(--fw-semibold);line-height:var(--lh-tight);letter-spacing:-.015em">Заголовок раздела</span></div>
+      <div class="type-row"><span class="caption">fs-lg, 1.25rem</span><span style="font-size:var(--fs-lg);font-weight:var(--fw-semibold);line-height:var(--lh-tight)">Заголовок карточки</span></div>
+      <div class="type-row"><span class="caption">fs-md, 1rem</span><span>Основной текст: абзацы, описания и всё, что читают подряд.</span></div>
+      <div class="type-row"><span class="caption">fs-sm, .9375rem</span><span style="font-size:var(--fs-sm)">Текст контролов: кнопки, поля и подписи к ним.</span></div>
+      <div class="type-row"><span class="caption">fs-xs, .8125rem</span><span style="font-size:var(--fs-xs);color:var(--color-text-muted)">Подсказки, бейджи и мелкие пояснения.</span></div>
+      <div class="type-row"><span class="caption">font-mono</span><code style="font-size:var(--fs-sm)">const status = await ping("api.example.com");</code></div>
+    </div>
+  </section>
+
+  <section class="section" id="depth">
+    <h2>Тени и скругления</h2>
+    <p class="lead">Четыре уровня тени: от почти плоской до всплывающих слоёв. Скругление растёт вместе с размером элемента.</p>
+    <h3 class="sub">Тени</h3>
+    <div class="boxes">
+      <div class="box" style="box-shadow:var(--shadow-xs)"><span class="caption">shadow-xs</span></div>
+      <div class="box" style="box-shadow:var(--shadow-sm)"><span class="caption">shadow-sm</span></div>
+      <div class="box" style="box-shadow:var(--shadow-md)"><span class="caption">shadow-md</span></div>
+      <div class="box" style="box-shadow:var(--shadow-lg)"><span class="caption">shadow-lg</span></div>
+    </div>
+    <h3 class="sub">Скругления</h3>
+    <div class="boxes">
+      <div class="box" style="border-radius:var(--radius-sm)"><span class="caption">radius-sm, 6px</span></div>
+      <div class="box" style="border-radius:var(--radius-md)"><span class="caption">radius-md, 10px</span></div>
+      <div class="box" style="border-radius:var(--radius-lg)"><span class="caption">radius-lg, 16px</span></div>
+      <div class="box" style="border-radius:var(--radius-full)"><span class="caption">radius-full</span></div>
+    </div>
+  </section>
+
+  <!-- КОМПОНЕНТЫ -->
+  <section class="section" id="buttons">
+    <h2>Кнопки</h2>
+    <p class="lead">Одно главное действие на экран, остальные вторичные. Состояния описаны один раз и работают для всех вариантов.</p>
+    <div class="stage">
+      <div class="scroll">
+        <div class="states">
+          <span></span>
+          <span class="caption">Обычная</span><span class="caption">Наведение</span><span class="caption">Нажатие</span>
+          <span class="caption">Фокус</span><span class="caption">Отключена</span><span class="caption">Загрузка</span>
+
+          <span class="caption">primary</span>
+          <button class="btn btn--primary" type="button">Сохранить</button>
+          <button class="btn btn--primary is-hover" type="button">Сохранить</button>
+          <button class="btn btn--primary is-active" type="button">Сохранить</button>
+          <button class="btn btn--primary is-focus" type="button">Сохранить</button>
+          <button class="btn btn--primary" type="button" disabled>Сохранить</button>
+          <button class="btn btn--primary" type="button" aria-busy="true">Сохранение</button>
+
+          <span class="caption">secondary</span>
+          <button class="btn btn--secondary" type="button">Сохранить</button>
+          <button class="btn btn--secondary is-hover" type="button">Сохранить</button>
+          <button class="btn btn--secondary is-active" type="button">Сохранить</button>
+          <button class="btn btn--secondary is-focus" type="button">Сохранить</button>
+          <button class="btn btn--secondary" type="button" disabled>Сохранить</button>
+          <button class="btn btn--secondary" type="button" aria-busy="true">Сохранение</button>
+
+          <span class="caption">ghost</span>
+          <button class="btn btn--ghost" type="button">Сохранить</button>
+          <button class="btn btn--ghost is-hover" type="button">Сохранить</button>
+          <button class="btn btn--ghost is-active" type="button">Сохранить</button>
+          <button class="btn btn--ghost is-focus" type="button">Сохранить</button>
+          <button class="btn btn--ghost" type="button" disabled>Сохранить</button>
+          <button class="btn btn--ghost" type="button" aria-busy="true">Сохранение</button>
+
+          <span class="caption">danger</span>
+          <button class="btn btn--danger" type="button">Удалить</button>
+          <button class="btn btn--danger is-hover" type="button">Удалить</button>
+          <button class="btn btn--danger is-active" type="button">Удалить</button>
+          <button class="btn btn--danger is-focus" type="button">Удалить</button>
+          <button class="btn btn--danger" type="button" disabled>Удалить</button>
+          <button class="btn btn--danger" type="button" aria-busy="true">Удаление</button>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="sub">Размеры и иконки</h3>
+        <div class="row">
+          <button class="btn btn--primary btn--sm" type="button">Маленькая</button>
+          <button class="btn btn--primary" type="button">Средняя</button>
+          <button class="btn btn--primary btn--lg" type="button">Большая</button>
+          <button class="btn btn--secondary" type="button"><svg class="icon"><use href="#i-plus"/></svg>Добавить проект</button>
+          <button class="btn btn--secondary btn--icon" type="button" aria-label="Найти"><svg class="icon"><use href="#i-search"/></svg></button>
+          <button class="btn btn--primary" type="button" data-demo-load>Нажмите, чтобы увидеть загрузку</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="inputs">
+    <h2>Поля ввода</h2>
+    <p class="lead">Метка всегда над полем, подсказка под ним. Ошибка объясняет, что исправить, а не только что не так.</p>
+    <div class="stage">
+      <div class="cols">
+        <div class="field">
+          <label class="field__label" for="f-name">Название проекта</label>
+          <input class="input" id="f-name" placeholder="Например, Север">
+          <span class="field__hint">Видно всем участникам команды.</span>
+        </div>
+        <div class="field">
+          <label class="field__label" for="f-search">Поиск</label>
+          <div class="input-wrap">
+            <svg class="icon"><use href="#i-search"/></svg>
+            <input class="input" id="f-search" type="search" placeholder="Найти проект">
+          </div>
+        </div>
+        <div class="field field--error">
+          <label class="field__label" for="f-mail">Электронная почта</label>
+          <input class="input" id="f-mail" type="email" value="anna@example" aria-invalid="true" aria-describedby="f-mail-h">
+          <span class="field__hint" id="f-mail-h">Не хватает домена. Пример: anna@example.com</span>
+        </div>
+        <div class="field field--success">
+          <label class="field__label" for="f-slug">Адрес проекта</label>
+          <input class="input" id="f-slug" value="sever-app" aria-describedby="f-slug-h">
+          <span class="field__hint" id="f-slug-h">Адрес свободен.</span>
+        </div>
+        <div class="field">
+          <label class="field__label" for="f-id">Идентификатор</label>
+          <input class="input" id="f-id" value="prj_4821" disabled aria-describedby="f-id-h">
+          <span class="field__hint" id="f-id-h">Нельзя изменить после создания.</span>
+        </div>
+        <div class="field">
+          <label class="field__label" for="f-region">Регион</label>
+          <select class="input" id="f-region">
+            <option>Франкфурт</option>
+            <option>Стокгольм</option>
+            <option>Вашингтон</option>
+          </select>
+        </div>
+        <div class="field" style="grid-column:1/-1;max-width:none">
+          <label class="field__label" for="f-desc">Описание</label>
+          <textarea class="input" id="f-desc" placeholder="Коротко опишите, чем занимается проект"></textarea>
+          <span class="field__hint">До 300 символов.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="checks">
+    <h2>Чекбоксы, радио и переключатели</h2>
+    <p class="lead">Чекбокс для набора независимых опций, радио для выбора одного варианта, переключатель для действия, которое вступает в силу сразу.</p>
+    <div class="stage">
+      <div class="cols">
+        <fieldset style="border:0;padding:0;margin:0;display:grid;gap:var(--space-3)">
+          <legend class="sub" style="padding:0">Чекбоксы</legend>
+          <label class="check"><input type="checkbox"><span>Обычный</span></label>
+          <label class="check"><input type="checkbox" checked><span>Выбран</span></label>
+          <label class="check"><input type="checkbox" id="ind"><span>Выбраны не все</span></label>
+          <label class="check"><input type="checkbox" disabled><span>Отключён</span></label>
+          <label class="check"><input type="checkbox" checked disabled><span>Отключён и выбран</span></label>
+          <label class="check"><input type="checkbox" checked><span>Уведомления о сбоях<small>Письмо придёт не позже чем через минуту.</small></span></label>
+        </fieldset>
+        <fieldset style="border:0;padding:0;margin:0;display:grid;gap:var(--space-3)">
+          <legend class="sub" style="padding:0">Радио</legend>
+          <label class="check"><input type="radio" name="plan" checked><span>Каждую минуту</span></label>
+          <label class="check"><input type="radio" name="plan"><span>Каждые 5 минут</span></label>
+          <label class="check"><input type="radio" name="plan"><span>Каждый час</span></label>
+          <label class="check"><input type="radio" name="plan" disabled><span>Каждую секунду</span></label>
+        </fieldset>
+        <fieldset style="border:0;padding:0;margin:0;display:grid;gap:var(--space-3)">
+          <legend class="sub" style="padding:0">Переключатели</legend>
+          <label class="switch"><input type="checkbox" role="switch"><span>Автодеплой</span></label>
+          <label class="switch"><input type="checkbox" role="switch" checked><span>Публичный доступ</span></label>
+          <label class="switch"><input type="checkbox" role="switch" disabled><span>Режим обслуживания</span></label>
+        </fieldset>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="alerts">
+    <h2>Алерты</h2>
+    <p class="lead">Заголовок говорит, что произошло, текст подсказывает, что делать дальше. Ошибки не извиняются и не пугают.</p>
+    <div class="alerts">
+      <div class="alert" role="status">
+        <svg class="icon"><use href="#i-info"/></svg>
+        <div><p class="alert__title">Доступно обновление</p><p class="alert__text">Новая версия включится при следующем деплое. Ничего делать не нужно.</p></div>
+        <button class="btn btn--ghost btn--sm btn--icon alert__close" type="button" aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
+      </div>
+      <div class="alert alert--success" role="status">
+        <svg class="icon"><use href="#i-check"/></svg>
+        <div><p class="alert__title">Проект сохранён</p><p class="alert__text">Изменения уже доступны всей команде.</p></div>
+        <button class="btn btn--ghost btn--sm btn--icon alert__close" type="button" aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
+      </div>
+      <div class="alert alert--warning" role="alert">
+        <svg class="icon"><use href="#i-warn"/></svg>
+        <div><p class="alert__title">Лимит почти исчерпан</p><p class="alert__text">Использовано 92% проверок за месяц. Перейдите на другой тариф, чтобы мониторинг не остановился.</p></div>
+        <button class="btn btn--ghost btn--sm btn--icon alert__close" type="button" aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
+      </div>
+      <div class="alert alert--danger" role="alert">
+        <svg class="icon"><use href="#i-error"/></svg>
+        <div><p class="alert__title">Не удалось подключиться к серверу</p><p class="alert__text">Проверьте адрес и порт, затем повторите попытку.</p></div>
+        <button class="btn btn--ghost btn--sm btn--icon alert__close" type="button" aria-label="Закрыть"><svg class="icon"><use href="#i-x"/></svg></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="cards">
+    <h2>Карточки</h2>
+    <p class="lead">Контейнер с тремя необязательными частями: тело, подвал с действиями и интерактивность на всю карточку.</p>
+    <div class="cards">
+
+      <article class="card">
+        <div class="card__body">
+          <span class="badge badge--success">Работает</span>
+          <h3 class="card__title">Мониторинг API</h3>
+          <p class="card__text">Проверка каждые 60 секунд. Если сервис не отвечает, уведомление придёт в течение минуты.</p>
+        </div>
+        <div class="card__footer">
+          <button class="btn btn--ghost btn--sm" type="button">Настроить</button>
+          <button class="btn btn--primary btn--sm" type="button">Открыть</button>
+        </div>
+      </article>
+
+      <a class="card card--interactive" href="#cards">
+        <div class="card__body">
+          <span class="badge badge--primary">Новое</span>
+          <h3 class="card__title">Деплой по коммиту</h3>
+          <p class="card__text">Подключите репозиторий, и сборка будет запускаться при каждом пуше в основную ветку.</p>
+        </div>
+      </a>
+
+      <form class="card" onsubmit="return false">
+        <div class="card__body" style="gap:var(--space-4)">
+          <h3 class="card__title">Вход в аккаунт</h3>
+          <div class="field">
+            <label class="field__label" for="c-mail">Электронная почта</label>
+            <input class="input" id="c-mail" type="email" placeholder="you@example.com" autocomplete="email">
+          </div>
+          <div class="field">
+            <label class="field__label" for="c-pass">Пароль</label>
+            <input class="input" id="c-pass" type="password" autocomplete="current-password">
+          </div>
+          <label class="check"><input type="checkbox" checked><span>Запомнить меня на этом устройстве</span></label>
+          <button class="btn btn--primary btn--block" type="submit">Войти</button>
+        </div>
+      </form>
+
+    </div>
+  </section>
+
+</main>
+
+<script>
+  const root = document.documentElement;
+
+  /* Образцы цвета: значения читаются из CSS, поэтому обновляются при смене темы */
+  const groups = [
+    ['Поверхности и границы', ['bg', 'surface', 'sunken', 'border', 'border-strong']],
+    ['Текст', ['text', 'text-muted', 'text-faint']],
+    ['Основной цвет', ['primary', 'primary-hover', 'primary-active', 'primary-soft']],
+    ['Статусы', ['success', 'warning', 'danger', 'info']]
+  ];
+  document.getElementById('swatches').innerHTML = groups.map(([title, names]) =>
+    `<h3 class="sub">${title}</h3><div class="swatches">` +
+    names.map(n => `<div class="swatch"><i style="background:var(--color-${n})"></i><div><b>${n}</b><code data-var="--color-${n}"></code></div></div>`).join('') +
+    `</div>`
+  ).join('');
+
+  const themeBtn = document.getElementById('theme');
+  function paint() {
+    const cs = getComputedStyle(root);
+    document.querySelectorAll('[data-var]').forEach(el => { el.textContent = cs.getPropertyValue(el.dataset.var).trim(); });
+    themeBtn.textContent = root.dataset.theme === 'dark' ? 'Светлая тема' : 'Тёмная тема';
+  }
+  themeBtn.addEventListener('click', () => {
+    const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    root.dataset.theme = next;
+    try { localStorage.setItem('ds-theme', next); } catch (e) {}
+    paint();
+  });
+  paint();
+
+  /* Демо: промежуточное состояние чекбокса, загрузка, закрытие алертов */
+  document.getElementById('ind').indeterminate = true;
+  document.querySelectorAll('[data-demo-load]').forEach(b => b.addEventListener('click', () => {
+    b.setAttribute('aria-busy', 'true');
+    setTimeout(() => b.removeAttribute('aria-busy'), 1600);
+  }));
+  document.querySelectorAll('.alert__close').forEach(b => b.addEventListener('click', () => b.closest('.alert').remove()));
+</script>
+</body>
+</html>
