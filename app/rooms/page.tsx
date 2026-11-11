@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { Flash } from "@/components/Flash";
 import { SubmitButton } from "@/components/SubmitButton";
 import { createRoomAction, joinRoomAction } from "@/app/actions/rooms";
@@ -16,14 +17,12 @@ interface MembershipRow {
 export default async function RoomsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; ok?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; role?: string }>;
 }) {
   const params = await searchParams;
+  const onlyStaff = params.role === "staff";
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) redirect(`/auth/login?next=${encodeURIComponent("/rooms")}`);
 
@@ -34,7 +33,10 @@ export default async function RoomsPage({
     .order("joined_at", { ascending: false });
 
   const memberships = (data ?? []) as unknown as MembershipRow[];
-  const rooms = memberships.filter((row) => row.rooms).map((row) => ({ ...row, rooms: row.rooms as Room }));
+  const rooms = memberships
+    .filter((row) => row.rooms)
+    .filter((row) => !onlyStaff || row.role !== "voter")
+    .map((row) => ({ ...row, rooms: row.rooms as Room }));
   const roomIds = rooms.map((row) => row.rooms.id);
 
   const openPolls = new Map<string, number>();
@@ -59,9 +61,11 @@ export default async function RoomsPage({
     <main className="container">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Ваши комнаты</h1>
+          <h1 className="page-title">{onlyStaff ? "Мои комнаты" : "Ваши комнаты"}</h1>
           <p className="page-sub">
-            Комната — это общий код для класса или группы. Внутри комнаты может быть сколько угодно голосований.
+            {onlyStaff
+              ? "Комнаты, где вы создатель или организатор: здесь вы управляете голосованиями."
+              : "Комната — это общий код для класса или группы. Внутри комнаты может быть сколько угодно голосований."}
           </p>
         </div>
         <Link className="btn btn--secondary" href="/join">
@@ -74,13 +78,29 @@ export default async function RoomsPage({
 
       <Flash error={params.error} ok={params.ok} />
 
-      <section className="section" style={{ marginTop: "var(--space-4)" }}>
+      <div className="menu" style={{ marginTop: "var(--space-4)" }}>
+        <Link className={`btn btn--sm${onlyStaff ? " btn--ghost" : " btn--secondary"}`} href="/rooms">
+          Все мои комнаты
+        </Link>
+        <Link
+          className={`btn btn--sm${onlyStaff ? " btn--secondary" : " btn--ghost"}`}
+          href="/rooms?role=staff"
+        >
+          Где я организатор
+        </Link>
+      </div>
+
+      <section className="section">
         {rooms.length === 0 ? (
           <div className="panel empty">
             <svg className="icon" style={{ width: 28, height: 28 }}>
               <use href="#i-vote" />
             </svg>
-            <p style={{ margin: 0 }}>Пока нет ни одной комнаты. Создайте свою или войдите по коду организатора.</p>
+            <p style={{ margin: 0 }}>
+              {onlyStaff
+                ? "Вы пока не создавали комнат. Создайте свою — она появится здесь."
+                : "Пока нет ни одной комнаты. Создайте свою или войдите по коду организатора."}
+            </p>
           </div>
         ) : (
           <div className="grid grid--polls">

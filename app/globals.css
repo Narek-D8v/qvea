@@ -8,8 +8,8 @@
    1. ДИЗАЙН-ТОКЕНЫ
    ===================================================================== */
 :root {
-  --font-sans: "Onest", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-sans: var(--font-onest), system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --fs-xs: .8125rem;  --fs-sm: .9375rem; --fs-md: 1rem;
   --fs-lg: 1.25rem;   --fs-xl: 1.625rem; --fs-2xl: 2.25rem;
@@ -327,6 +327,76 @@ select.input {
 .userbox__meta { display: grid; line-height: 1.2; min-width: 0; }
 .userbox__meta small { color: var(--color-text-faint); font-size: var(--fs-xs); }
 
+/* Меню аккаунта в шапке */
+.account-menu { position: relative; }
+.account-trigger {
+  display: flex; align-items: center; gap: var(--space-3); min-width: 0;
+  padding: 4px 6px 4px 4px; border: 1px solid transparent; border-radius: var(--radius-full);
+  background: transparent; color: inherit; font: inherit; cursor: pointer;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.account-trigger:hover { background: var(--color-sunken); border-color: var(--color-border); }
+.account-trigger[aria-expanded="true"] { background: var(--color-sunken); border-color: var(--color-border-strong); }
+.account-trigger__chevron {
+  width: 16px; height: 16px; color: var(--color-text-faint); flex: none;
+  transition: transform var(--dur) var(--ease);
+}
+.account-trigger[aria-expanded="true"] .account-trigger__chevron { transform: rotate(180deg); }
+
+.account-menu__panel {
+  position: absolute; right: 0; top: calc(100% + var(--space-2)); z-index: 30;
+  width: 272px; padding: var(--space-2);
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+  animation: account-menu-in 140ms var(--ease);
+}
+@keyframes account-menu-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+.account-menu__head {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3); margin-bottom: var(--space-1);
+  border-bottom: 1px solid var(--color-border);
+}
+.account-menu__who { display: grid; gap: 2px; min-width: 0; }
+.account-menu__who strong { font-size: var(--fs-sm); font-weight: var(--fw-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-menu__who small { color: var(--color-text-faint); font-size: var(--fs-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-menu__list, .account-menu__foot { display: grid; gap: 2px; }
+.account-menu__foot { margin-top: var(--space-1); padding-top: var(--space-1); border-top: 1px solid var(--color-border); }
+.account-menu__item {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3); border-radius: var(--radius-md);
+  color: var(--color-text); text-decoration: none; font-size: var(--fs-sm);
+  transition: background var(--dur) var(--ease);
+}
+.account-menu__item .icon { width: 18px; height: 18px; color: var(--color-text-muted); flex: none; }
+.account-menu__item:hover { background: var(--color-sunken); }
+.account-menu__item:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 1px; }
+.account-menu__item--danger, .account-menu__item--danger .icon { color: var(--color-danger-text); }
+.account-menu__item--danger:hover { background: var(--color-danger-soft); }
+.account-menu__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.avatar--initials {
+  display: grid; place-items: center; font-size: var(--fs-xs); font-weight: var(--fw-semibold);
+  color: var(--color-text-muted); background: var(--color-sunken);
+}
+.avatar--xl { width: 96px; height: 96px; font-size: var(--fs-2xl); }
+
+/* Профиль: крупная аватарка и выбор файла */
+.profile-id { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); }
+.avatar-picker { display: flex; align-items: center; gap: var(--space-3); }
+.avatar-picker .avatar { width: 56px; height: 56px; }
+.avatar-picker .avatar--initials .icon { color: var(--color-text-faint); }
+.input--file { padding: var(--space-2); cursor: pointer; font-size: var(--fs-sm); }
+.input--file::file-selector-button {
+  margin-right: var(--space-3); padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm);
+  background: var(--color-surface); color: var(--color-text);
+  font: inherit; font-size: var(--fs-sm); cursor: pointer;
+}
+.input--file::file-selector-button:hover { background: var(--color-sunken); }
+
 .stack { display: grid; gap: var(--space-4); }
 .stack--sm { gap: var(--space-2); }
 .stack--md { gap: var(--space-3); }
@@ -464,6 +534,25 @@ a.btn { text-decoration: none; }
 .room-layout { display: grid; gap: var(--space-5); grid-template-columns: minmax(0, 1fr); align-items: start; }
 @media (min-width: 920px) {
   .room-layout { grid-template-columns: minmax(0, 1fr) 320px; }
+}
+
+/* Заглушки на время загрузки страницы */
+.skeleton {
+  height: 12px; border-radius: var(--radius-full);
+  background: linear-gradient(90deg, var(--color-sunken) 25%, var(--color-border) 37%, var(--color-sunken) 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.2s ease-in-out infinite;
+}
+.skeleton--title { height: 28px; max-width: 380px; }
+.skeleton--line { max-width: 100%; }
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
 }
 
 /* Мобильная адаптация */

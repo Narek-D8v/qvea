@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { loadRoom, type Poll, type PollStats } from "@/lib/room";
 import { Flash } from "@/components/Flash";
 import { CopyButton } from "@/components/CopyButton";
@@ -21,13 +22,11 @@ export default async function RoomPage({
   const query = await searchParams;
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) redirect(`/auth/login?next=${encodeURIComponent(`/r/${code}`)}`);
 
-  const access = await loadRoom(supabase, code);
+  const access = await loadRoom(supabase, code, user.id);
   if (access.status === "not_found") notFound();
 
   if (access.status === "full") {
@@ -57,19 +56,19 @@ export default async function RoomPage({
 
   const { room, role, isAdmin } = access;
 
-  const [{ data: pollsData }, { data: membersData }] = await Promise.all([
+  const [{ data: pollsData }, { count: voterCountData }] = await Promise.all([
     supabase
       .from("polls")
       .select("id, room_id, title, description, mode, multi_select, max_choices, status, allow_change, created_at, closed_at")
       .eq("room_id", room.id)
       .order("created_at", { ascending: false }),
-    supabase.from("room_members").select("user_id, role").eq("room_id", room.id),
+    // Только число, без строк: на класс из 30 человек это 30 строк меньше в ответе.
+    supabase.from("room_members").select("*", { count: "exact", head: true }).eq("room_id", room.id).eq("role", "voter"),
   ]);
 
   const polls = (pollsData ?? []) as Poll[];
   const pollIds = polls.map((poll) => poll.id);
-  const members = (membersData ?? []) as { user_id: string; role: string }[];
-  const voterCount = members.filter((member) => member.role === "voter").length;
+  const voterCount = voterCountData ?? 0;
 
   const optionCounts = new Map<string, number>();
   const votedPolls = new Set<string>();

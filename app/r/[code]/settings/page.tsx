@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { loadRoom, type ProfilePublic, type RoomRole } from "@/lib/room";
 import { Flash } from "@/components/Flash";
 import { CopyButton } from "@/components/CopyButton";
@@ -33,13 +34,11 @@ export default async function RoomSettingsPage({
   const query = await searchParams;
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) redirect(`/auth/login?next=${encodeURIComponent(`/r/${code}/settings`)}`);
 
-  const access = await loadRoom(supabase, code);
+  const access = await loadRoom(supabase, code, user.id);
   if (access.status !== "ok") redirect("/rooms");
   if (!access.isAdmin) redirect(`/r/${access.room.code}?error=NOT_AN_ADMIN`);
 

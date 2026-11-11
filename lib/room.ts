@@ -83,38 +83,35 @@ export type RoomAccess =
 export async function loadRoom(
   supabase: SupabaseClient,
   rawCode: string,
+  userId: string,
 ): Promise<RoomAccess> {
   const code = rawCode.trim().toUpperCase();
 
-  const { error: joinError } = await supabase.rpc("join_room", { p_code: code });
+  const { data: roomId, error: joinError } = await supabase.rpc("join_room", { p_code: code });
 
-  if (joinError) {
-    const message = joinError.message ?? "";
-    if (message.includes("ROOM_NOT_FOUND")) return { status: "not_found" };
+  if (joinError || !roomId) {
+    const message = joinError?.message ?? "";
     if (message.includes("ROOM_FULL")) return { status: "full" };
     return { status: "not_found" };
   }
 
-  const { data: room } = await supabase
-    .from("rooms")
-    .select("id, code, title, description, max_participants, owner_id, created_at")
-    .eq("code", code)
-    .maybeSingle<Room>();
+  // Комната и роль нужны только после входа, но друг от друга не зависят —
+  // запрашиваем оба параллельно, чтобы не платить за два круга до базы.
+  const [{ data: room }, { data: membership }] = await Promise.all([
+    supabase
+      .from("rooms")
+      .select("id, code, title, description, max_participants, owner_id, created_at")
+      .eq("id", roomId as string)
+      .maybeSingle<Room>(),
+    supabase
+      .from("room_members")
+      .select("role")
+      .eq("room_id", roomId as string)
+      .eq("user_id", userId)
+      .maybeSingle<{ role: RoomRole }>(),
+  ]);
 
   if (!room) return { status: "not_found" };
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return { status: "not_found" };
-
-  const { data: membership } = await supabase
-    .from("room_members")
-    .select("role")
-    .eq("room_id", room.id)
-    .eq("user_id", user.id)
-    .maybeSingle<{ role: RoomRole }>();
 
   const role: RoomRole = membership?.role ?? "voter";
 

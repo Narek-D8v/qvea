@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import {
   loadRoom,
   type IdentifiedBallot,
@@ -28,13 +29,11 @@ export default async function PollPage({
   const query = await searchParams;
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) redirect(`/auth/login?next=${encodeURIComponent(`/r/${code}/p/${pollId}`)}`);
 
-  const access = await loadRoom(supabase, code);
+  const access = await loadRoom(supabase, code, user.id);
   if (access.status === "not_found") notFound();
 
   if (access.status === "full") {
@@ -58,42 +57,45 @@ export default async function PollPage({
 
   const { room, isAdmin } = access;
 
-  const { data: pollData } = await supabase
-    .from("polls")
-    .select(
-      "id, room_id, title, description, mode, multi_select, max_choices, status, allow_change, created_at, closed_at",
-    )
-    .eq("id", pollId)
-    .eq("room_id", room.id)
-    .maybeSingle<Poll>();
-
-  if (!pollData) notFound();
-  const poll = pollData;
-
-  const [{ data: optionsData }, { data: myVotesData }, { data: statsData }] = await Promise.all([
+  // Всё, что нужно странице, не зависит друг от друга: шесть запросов уходят
+  // одним пакетом вместо шести последовательных ожиданий.
+  const [pollRes, optionsRes, myVotesRes, statsRes, resultsRes, ballotsRes] = await Promise.all([
+    supabase
+      .from("polls")
+      .select(
+        "id, room_id, title, description, mode, multi_select, max_choices, status, allow_change, created_at, closed_at",
+      )
+      .eq("id", pollId)
+      .eq("room_id", room.id)
+      .maybeSingle<Poll>(),
     supabase
       .from("poll_options")
       .select("id, poll_id, label, sort_order")
-      .eq("poll_id", poll.id)
+      .eq("poll_id", pollId)
       .order("sort_order", { ascending: true }),
-    supabase.from("votes").select("option_id").eq("poll_id", poll.id).eq("user_id", user.id),
-    supabase.from("poll_stats").select("poll_id, votes_count, voters_count, updated_at").eq("poll_id", poll.id).maybeSingle<PollStats>(),
+    supabase.from("votes").select("option_id").eq("poll_id", pollId).eq("user_id", user.id),
+    supabase
+      .from("poll_stats")
+      .select("poll_id, votes_count, voters_count, updated_at")
+      .eq("poll_id", pollId)
+      .maybeSingle<PollStats>(),
+    supabase.rpc("poll_results", { p_poll_id: pollId }),
+    isAdmin ? supabase.rpc("identified_ballots", { p_poll_id: pollId }) : Promise.resolve(null),
   ]);
 
-  const options = (optionsData ?? []) as PollOption[];
-  const myOptions = new Set((myVotesData ?? []).map((row) => (row as { option_id: string }).option_id));
-  const hasVoted = myOptions.size > 0;
-  const stats = statsData ?? null;
+  const poll = pollRes.data;
+  if (!poll) notFound();
 
-  const { data: resultsData, error: resultsError } = await supabase.rpc("poll_results", {
-    p_poll_id: poll.id,
-  });
-  const results = resultsError ? null : ((resultsData ?? []) as PollResultRow[]);
+  const options = (optionsRes.data ?? []) as PollOption[];
+  const myOptions = new Set((myVotesRes.data ?? []).map((row) => (row as { option_id: string }).option_id));
+  const hasVoted = myOptions.size > 0;
+  const stats = statsRes.data ?? null;
+
+  const results = resultsRes.error ? null : ((resultsRes.data ?? []) as PollResultRow[]);
 
   let ballots: IdentifiedBallot[] = [];
-  if (isAdmin && poll.mode === "identified") {
-    const { data: ballotsData } = await supabase.rpc("identified_ballots", { p_poll_id: poll.id });
-    ballots = (ballotsData ?? []) as IdentifiedBallot[];
+  if (isAdmin && poll.mode === "identified" && ballotsRes && !ballotsRes.error) {
+    ballots = (ballotsRes.data ?? []) as IdentifiedBallot[];
   }
 
   const ballotRows = new Map<

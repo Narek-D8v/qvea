@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { Flash } from "@/components/Flash";
 import { SubmitButton } from "@/components/SubmitButton";
 import { joinRoomAction } from "@/app/actions/rooms";
@@ -11,11 +11,7 @@ export default async function JoinPage({
   searchParams: Promise<{ error?: string; ok?: string; code?: string }>;
 }) {
   const params = await searchParams;
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) redirect(`/auth/login?next=${encodeURIComponent("/join")}`);
 

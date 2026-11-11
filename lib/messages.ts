@@ -27,6 +27,11 @@ export const ERROR_MESSAGES: Record<string, string> = {
   NO_CHOICE: "Выберите хотя бы один вариант.",
   RESULTS_HIDDEN: "Результаты станут видны после закрытия голосования.",
   NOT_IDENTIFIED: "Это голосование анонимное.",
+  AVATAR_REQUIRED: "Выберите файл с картинкой.",
+  AVATAR_TYPE: "Подойдёт JPEG, PNG или WebP.",
+  AVATAR_TOO_LARGE: "Файл больше 5 МБ. Сожмите картинку или выберите другую.",
+  AVATAR_UPLOAD: "Не удалось загрузить картинку. Попробуйте ещё раз.",
+  AVATAR_SAVE: "Картинка загрузилась, но профиль не сохранился. Попробуйте ещё раз.",
   UNKNOWN: "Что-то пошло не так. Попробуйте ещё раз.",
 };
 
@@ -42,6 +47,7 @@ export const OK_MESSAGES: Record<string, string> = {
   closed: "Голосование закрыто, результаты опубликованы.",
   opened: "Голосование открыто.",
   copied: "Скопировано.",
+  avatar_updated: "Аватар обновлён.",
 };
 
 export function errorMessage(code?: string | null): string | null {

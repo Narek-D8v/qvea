@@ -1,7 +1,27 @@
 import type { Metadata, Viewport } from "next";
+import { JetBrains_Mono, Onest } from "next/font/google";
 import "./globals.css";
 import { IconSprite } from "@/components/IconSprite";
 import { SiteHeader } from "@/components/SiteHeader";
+
+/**
+ * Шрифты собираются вместе с проектом и раздаются с нашего домена: браузер не
+ * ждёт ответа сторонних CDN (Google Fonts из России часто отвечает медленно
+ * или не отвечает вовсе) и не делает лишних DNS/TLS-соединений.
+ */
+const sans = Onest({
+  subsets: ["latin", "cyrillic"],
+  display: "swap",
+  variable: "--font-onest",
+  fallback: ["system-ui", "Segoe UI", "Roboto", "Arial", "sans-serif"],
+});
+
+const mono = JetBrains_Mono({
+  subsets: ["latin", "cyrillic"],
+  display: "swap",
+  variable: "--font-jetbrains",
+  fallback: ["ui-monospace", "Consolas", "monospace"],
+});
 
 export const metadata: Metadata = {
   title: "Qvea — голосования для класса",
@@ -12,6 +32,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#131C28",
 };
 
 const THEME_SCRIPT = `
@@ -25,14 +46,8 @@ const THEME_SCRIPT = `
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" suppressHydrationWarning>
+    <html lang="ru" className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Onest:wght@400;500;600&display=swap"
-          rel="stylesheet"
-        />
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body>

@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { Flash } from "@/components/Flash";
 
 export default async function HomePage({
@@ -9,16 +7,11 @@ export default async function HomePage({
   searchParams: Promise<{ next?: string; error?: string; ok?: string }>;
 }) {
   const params = await searchParams;
-  const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  // Вошедшего пользователя с лендинга уводит proxy.ts — здесь уже нет ни
+  // одного похода в Supabase, страница рисуется сразу.
   const requested = params.next;
   const next = requested && requested.startsWith("/") && !requested.startsWith("//") ? requested : "/rooms";
-
-  if (user) redirect(next);
 
   const loginHref = `/auth/login?next=${encodeURIComponent(next)}`;
 
